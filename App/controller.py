@@ -118,12 +118,12 @@ def SortArtworks(artworks,sort_type,list_type):
 def encounterArtist(artists,artist_name):
     return model.encounterArtist(artists,artist_name)
 
-def artistMediumInfo(artworks,artist_ID,list_type):
-    return model.artistMediumInfo(artworks,artist_ID,list_type)
+def artistMediumInfo(artworks,artist_ID,list_type,map_type):
+    return model.artistMediumInfo(artworks,artist_ID,list_type,map_type)
 
 #Requirement 4
-def nationalityArtworks(artworks,artists,list_type):
-    return model.nationalityArtworks(artworks,artists,list_type)
+def nationalityArtworks(artworks,catalog,list_type,map_type):
+    return model.nationalityArtworks(artworks,catalog,list_type,map_type)
 
 def sortNations(artworksNationality,nation,sort_type):
     return model.sortNations(artworksNationality,nation,sort_type)
@@ -132,13 +132,10 @@ def sortNations(artworksNationality,nation,sort_type):
 def checkDepartment(artworks,department):
     return model.checkDeparment(artworks,department)
 
-def moveDepartment(artworks,department,list_type):
-    return model.moveDepartment(artworks,department,list_type)
+def moveDepartment(artworks,department,map_type):
+    return model.moveDepartment(artworks,department,map_type)
 
-def artworksWithDate(artworks_dep,list_type):
-    return model.artworksWithDate(artworks_dep,list_type)
-
-def SortArtworksByDate(artworks_dep,sort_type):
+def SortArtworksByDate(artworks_dep,sort_type,list_type):
     if(sort_type == 1):
         sort_type = "QUICKSORT"
     elif(sort_type == 2):
@@ -149,9 +146,9 @@ def SortArtworksByDate(artworks_dep,sort_type):
         sort_type = "SELECTION"
     else:
         sort_type = "MERGE"
-    return model.SortArtworksByDate(artworks_dep,sort_type)
+    return model.SortArtworksByDate(artworks_dep,sort_type,list_type)
 
-def SortArtworksByPrice(artworks_dep,sort_type):
+def SortArtworksByPrice(artworks_dep,sort_type,list_type):
     if(sort_type == 1):
         sort_type = "QUICKSORT"
     elif(sort_type == 2):
@@ -162,7 +159,7 @@ def SortArtworksByPrice(artworks_dep,sort_type):
         sort_type = "SELECTION"
     else:
         sort_type = "MERGE"
-    return model.SortArtworksByPrice(artworks_dep,sort_type)
+    return model.SortArtworksByPrice(artworks_dep,sort_type,list_type)
 
 #Requirement 7
 def encounterNationality(catalog,nationality):

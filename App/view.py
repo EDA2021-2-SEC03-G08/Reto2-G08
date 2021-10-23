@@ -24,6 +24,7 @@ import config as cf
 import sys
 import controller
 from DISClib.ADT import list as lt
+from DISClib.ADT import map
 assert cf
 
 
@@ -122,7 +123,7 @@ def printReq1Answer(SortedArtists,StartYear,EndYear):
     input('Presione "Enter" para continuar.\n')
 
 #Requirement 2
-def printReq2Answer(SortedArtworks,StartYear,EndYear):
+def printReq2Answer(SortedArtworks,StartYear,EndYear,artists):
     if lt.size(SortedArtworks) > 0:
         print('Se encontró(aron)', str(lt.size(SortedArtworks)), 'obra(s) entre la fecha',
         str(StartYear), 'y', str(EndYear) + '.')
@@ -133,14 +134,20 @@ def printReq2Answer(SortedArtworks,StartYear,EndYear):
             i = 1
             while i <= 3:
                 artwork = lt.getElement(SortedArtworks,i)
-                print(str(i) + '. Título: ' + artwork['Title'] +',', 'Categoría:', str(artwork['Cataloged']) + ',',
+                artist_IDs = artwork['ConstituentID']
+                artists_artworks = controller.findArtist(artists,artist_IDs)
+                artists_artworks = ', '.join(artists_artworks)
+                print(str(i) + '. Título: ' + artwork['Title'] +',', 'Artista(s): ' + artists_artworks +',',
                 'Fecha:', artwork['DateAcquired'] + ',', 'Medio:', artwork['Medium'] + ',', 'Dimensiones:', artwork['Dimensions'] + '.')
                 i += 1
             print('...')
             i = lt.size(SortedArtworks)-2
             while i <= lt.size(SortedArtworks):
                 artwork = lt.getElement(SortedArtworks,i)
-                print(str(i) + '. Título: ' + artwork['Title'] +',', 'Categoría:', str(artwork['Cataloged']) + ',',
+                artist_IDs = artwork['ConstituentID']
+                artists_artworks = controller.findArtist(artists,artist_IDs)
+                artists_artworks = ', '.join(artists_artworks)
+                print(str(i) + '. Título: ' + artwork['Title'] +',', 'Artista(s): ' + artists_artworks +',',
                 'Fecha:', artwork['DateAcquired'] + ',', 'Medio:', artwork['Medium'] + ',', 'Dimensiones:', artwork['Dimensions'] + '.')
                 i += 1
         else:
@@ -148,11 +155,14 @@ def printReq2Answer(SortedArtworks,StartYear,EndYear):
             i = 1
             while i <= lt.size(SortedArtworks):
                 artwork = lt.getElement(SortedArtworks,i)
-                print(str(i) + '. Título: ' + artwork['Title'] +',', 'Categoría:', str(artwork['Cataloged']) + ',',
+                artist_IDs = artwork['ConstituentID']
+                artists_artworks = controller.findArtist(artists,artist_IDs)
+                artists_artworks = ', '.join(artists_artworks)
+                print(str(i) + '. Título: ' + artwork['Title'] +',', 'Artista(s): ' + artists_artworks +',',
                 'Fecha:', artwork['DateAcquired'] + ',', 'Medio:', artwork['Medium'] + ',', 'Dimensiones:', artwork['Dimensions'] + '.')
                 i += 1
     else:
-        print('No se encontró ninguna obra para el rango de años dado.')
+        print('No se encontró ninguna obra para el rango de fechas dado.')
     input('Presione "Enter" para continuar.\n')
 
 #Requirement 3
@@ -164,12 +174,29 @@ def printReq3Answer(artist, artist_info):
     print('\nEl medio más usado por ' + artist + ' en sus obras es ' + str(mostUsedMedium) + '.')
     input('Presione "Enter" para continuar.')
     print('\nLas obras creadas con el medio más usado son: ')
-    subList = controller.createSample(mediumArtworks,5)
-    i = 1
-    for artwork in lt.iterator(subList):
-        print(str(i) + '. Título: ' + artwork['Title'] +',', 'Fecha:', artwork['DateAcquired'] + ',', 
-        'Medio:', artwork['Medium'] + ',', 'Dimensiones:', artwork['Dimensions'] + '.')
-        i += 1
+    if lt.size(mediumArtworks) > 6:
+        print('Las primeras 3 y 3 últimas obras encontradas fueron:\n')
+        i = 1
+        while i <= 3:
+            artwork = lt.getElement(mediumArtworks,i)
+            print(str(i) + '. Título: ' + artwork['Title'] +',', 'Fecha:', artwork['DateAcquired'] + ',', 
+            'Medio:', artwork['Medium'] + ',', 'Dimensiones:', artwork['Dimensions'] + '.')
+            i += 1
+        print('...')
+        i = lt.size(mediumArtworks)-2
+        while i <= lt.size(mediumArtworks):
+            artwork = lt.getElement(mediumArtworks,i)
+            print(str(i) + '. Título: ' + artwork['Title'] +',', 'Fecha:', artwork['DateAcquired'] + ',', 
+            'Medio:', artwork['Medium'] + ',', 'Dimensiones:', artwork['Dimensions'] + '.')
+            i += 1
+    else:
+        print('La(s) obra(s) encontrada(s) fue(ron):\n')
+        i = 1
+        while i <= lt.size(mediumArtworks):
+            artwork = lt.getElement(mediumArtworks,i)
+            print(str(i) + '. Título: ' + artwork['Title'] +',', 'Fecha:', artwork['DateAcquired'] + ',', 
+            'Medio:', artwork['Medium'] + ',', 'Dimensiones:', artwork['Dimensions'] + '.')
+            i += 1
 
 #Requirement 4
 def printReq4Answer(art_nation,artworks_nation,sorted_nations,artists):
@@ -205,7 +232,7 @@ def printReq4Answer(art_nation,artworks_nation,sorted_nations,artists):
 
 #Requirement 5
 def printReq5Answer(moveDepartmentAns, department, sort_type, artists,list_type):
-    est_price, art2trans, est_weight, artworks_dep = moveDepartmentAns
+    est_price, art2trans, est_weight, price_map, date_map = moveDepartmentAns
     print('\nSe realizó la estimación del cálculo de costos para mover las obras del departamento ' + department + '.')
 
     print('\nEl total de obras a trasnportar es de ' + str(art2trans) + '.')
@@ -214,8 +241,7 @@ def printReq5Answer(moveDepartmentAns, department, sort_type, artists,list_type)
     input('Presione "Enter" para continuar.')
 
     print('\nLas 5 obras más antiguas encontradas son: ')
-    artworks_wdate = controller.artworksWithDate(artworks_dep,list_type)
-    artworks_date = controller.SortArtworksByDate(artworks_wdate,sort_type)
+    artworks_date = controller.SortArtworksByDate(date_map,sort_type,list_type)
     i = 1
     while i <= 5:
         artwork = lt.getElement(artworks_date,i)
@@ -228,7 +254,7 @@ def printReq5Answer(moveDepartmentAns, department, sort_type, artists,list_type)
     input('Presione "Enter" para continuar.')
 
     print('\nLas 5 obras más costosas encontradas son: ')
-    artworks_price = controller.SortArtworksByPrice(artworks_dep,sort_type)
+    artworks_price = controller.SortArtworksByPrice(price_map,sort_type,list_type)
     i = 1
     while i <= 5:
         artwork = lt.getElement(artworks_price,i)
@@ -356,31 +382,52 @@ while True:
         sort_type = 5
         sorted_artworks = controller.SortArtworks(artworksInRange,sort_type,list_type)
 
-        printReq2Answer(sorted_artworks,StartYear,EndYear)
+        printReq2Answer(sorted_artworks,StartYear,EndYear,Artists)
 
     elif int(inputs[0]) == 4:
+        valid_map = False
+        while not valid_map:
+            print("--Métodos de colisión")
+            print("1) Separate Chaining")
+            print("2) Linear Probing")
+            map_type = input("Seleccione el tipo de método de colisión a usar para el mapa: ")
+
+            valid_types = ["1","2"]
+            if map_type not in valid_types:
+                print("\nDebe seleccionar una opción válida.")
+                input('Presione "Enter" para continuar.\n')
+            else:
+                map_type = int(map_type)
+                valid_map = True
+
         artist_name = input('Brinde el nombre del artista del cual desea obtener información: ')
         artist_ID = controller.encounterArtist(Artists,artist_name)
         if artist_ID == 'NotFound':
             'No se ha encontrado el artista escogido.'
         else:
-            artist_info = controller.artistMediumInfo(Artworks,artist_ID,list_type)
+            artist_info = controller.artistMediumInfo(Artworks,artist_ID,list_type,map_type)
         printReq3Answer(artist_name,artist_info)
         input('Presione "Enter" para continuar.\n')
         
 
     elif int(inputs[0]) == 5:
         print('\nSe organizarán las obras por nacionalidad.')
-        sampleValido = False
-        while not sampleValido:
-            sample_size = input('Escoja el tamaño de muestra: ')
-            if sample_size.isnumeric():
-                sample_size = int(sample_size)
-                sampleValido = True
+        valid_map = False
+        while not valid_map:
+            print("--Métodos de colisión")
+            print("1) Separate Chaining")
+            print("2) Linear Probing")
+            map_type = input("Seleccione el tipo de método de colisión a usar para el mapa: ")
+
+            valid_types = ["1","2"]
+            if map_type not in valid_types:
+                print("\nDebe seleccionar una opción válida.")
+                input('Presione "Enter" para continuar.\n')
             else:
-                print("Por favor ingrese una opción válida")
-        sample = controller.createSample(Artworks,sample_size)
-        artworksNationality,nations = controller.nationalityArtworks(sample,Artists,list_type)
+                map_type = int(map_type)
+                valid_map = True
+        
+        artworksNationality,nations = controller.nationalityArtworks(Artworks,catalog,list_type,map_type)
         sort_type = 5
         sorted_nations,art_nation,artworks_nation = controller.sortNations(artworksNationality,nations,sort_type)
         printReq4Answer(art_nation,artworks_nation,sorted_nations,Artists)
@@ -388,18 +435,24 @@ while True:
 
 
     elif int(inputs[0]) == 6:
-        department = input('Brinde el nombre del departamento para el cual desea calcular el costo: ')
-        sampleValido = False
-        while not sampleValido:
-            sample_size = input('Escoja el tamaño de muestra: ')
-            if sample_size.isnumeric():
-                sample_size = int(sample_size)
-                sampleValido = True
+        valid_map = False
+        while not valid_map:
+            print("--Métodos de colisión")
+            print("1) Separate Chaining")
+            print("2) Linear Probing")
+            map_type = input("Seleccione el tipo de método de colisión a usar para el mapa: ")
+
+            valid_types = ["1","2"]
+            if map_type not in valid_types:
+                print("\nDebe seleccionar una opción válida.")
+                input('Presione "Enter" para continuar.\n')
             else:
-                print("Por favor ingrese una opción válida")
-        sample = controller.createSample(Artworks,sample_size)
-        if controller.checkDepartment(sample,department):
-            moveDepartmentAns = controller.moveDepartment(sample,department,list_type)
+                map_type = int(map_type)
+                valid_map = True
+        
+        department = input('Brinde el nombre del departamento para el cual desea calcular el costo: ')
+        if controller.checkDepartment(Artworks,department):
+            moveDepartmentAns = controller.moveDepartment(Artworks,department,map_type)
             sort_type = 5
             printReq5Answer(moveDepartmentAns,department,sort_type,Artists,list_type)
             input('Presione "Enter" para continuar.\n')

@@ -109,7 +109,7 @@ def loadNationality(catalog, artwork, list_type):
 # Funciones de consulta sobre el catálogo
 
 #Requirement 0
-def cmpArtworkByDate(artwork1, artwork2): 
+def cmpArtworkDates(artwork1, artwork2): 
     return artwork1["Date"] < artwork2['Date']
 
 def encounterMedium(catalog,medium):
@@ -117,15 +117,15 @@ def encounterMedium(catalog,medium):
 
 def sortArtworksByDate(artworks,sort_type):
     if sort_type == "QUICKSORT":
-        sortedList = qs.sort(artworks,cmpArtworkByDate)
+        sortedList = qs.sort(artworks,cmpArtworkDates)
     elif sort_type == "INSERTION":
-        sortedList = ins.sort(artworks,cmpArtworkByDate)
+        sortedList = ins.sort(artworks,cmpArtworkDates)
     elif sort_type == "SHELL":
-        sortedList = ss.sort(artworks,cmpArtworkByDate)
+        sortedList = ss.sort(artworks,cmpArtworkDates)
     elif sort_type == "SELECTION":
-        sortedList = scs.sort(artworks,cmpArtworkByDate)
+        sortedList = scs.sort(artworks,cmpArtworkDates)
     else:
-        sortedList = ms.sort(artworks,cmpArtworkByDate)
+        sortedList = ms.sort(artworks,cmpArtworkDates)
     return sortedList
 
 def artworksWithDate(artworks,list_type):
@@ -212,10 +212,10 @@ def SortArtworks(artworksInRange,sort_type,list_type):
     else:
         sorted_dates = ms.sort(dates,cmpDates)
     
-    sorted_artworks = lt.newList(list_type)
+    sorted_artworks = lt.newList(datastructure=list_type)
     for date in lt.iterator(sorted_dates):
         date_artworks = map.get(artworksInRange,date)['value']
-        for artwork in date_artworks:
+        for artwork in lt.iterator(date_artworks):
             lt.addLast(sorted_artworks,artwork)
     return sorted_artworks
 
@@ -226,29 +226,31 @@ def encounterArtist(artists,artist_name):
             return artist['ConstituentID']
     return 'NotFound'
 
-def artistMediumInfo(artworks,artist_ID,list_type):
-    mediums = {}
+def artistMediumInfo(artworks,artist_ID,list_type,map_type):
+    mediums = map.newMap(maptype=map_type)
     maxIteUses = 0
     artist_mediums = 0
     artist_artworks = 0
     for artwork in lt.iterator(artworks):
-        if artwork['ConstituentID'] == '[' + artist_ID + ']':
+        if artist_ID in (artwork['ConstituentID'].replace('[','')).replace(']','').split(','):
             artist_artworks += 1
             medium = artwork['Medium']
-            if medium not in mediums:
+            if not (map.contains(mediums,medium)):
                 artist_mediums += 1
-                mediums[medium] = lt.newList(datastructure=list_type)
-                lt.addLast(mediums[medium],artwork)
+                medium_artworks = lt.newList(datastructure=list_type)
+                lt.addLast(medium_artworks,artwork)
+                map.put(mediums,medium,medium_artworks)
                 if maxIteUses == 0:
                     maxIteUses = 1
                     mostUsed = medium
             else:
-                lt.addLast(mediums[medium],artwork)
-                IteUses = lt.size(mediums[medium])
+                medium_artworks = map.get(mediums,medium)['value']
+                lt.addLast(medium_artworks,artwork)
+                IteUses = lt.size(medium_artworks)
                 if IteUses > maxIteUses:
                     maxIteUses = IteUses
                     mostUsed = medium
-    return artist_artworks, artist_mediums, mostUsed, mediums[mostUsed]
+    return artist_artworks, artist_mediums, mostUsed, map.get(mediums,mostUsed)['value']
 
 #Requirement 4
 def findArtistNationality(artistsIDs_map,artist_IDs,list_type):
@@ -259,26 +261,26 @@ def findArtistNationality(artistsIDs_map,artist_IDs,list_type):
             lt.addLast(artwork_nationalities,artist['Nationality']) 
     return artwork_nationalities
 
-def nationalityArtworks(artworks,artists,list_type):
+def nationalityArtworks(artworks,catalog,list_type,map_type):
     artworksNationality = lt.newList(datastructure=list_type)
-    nations = {}
+    nations = map.newMap(maptype=map_type)
     for artwork in lt.iterator(artworks):
         artists_ID = artwork['ConstituentID']
-        artists_nationality = findArtistNationality(artists,artists_ID)
-        nations_ite = []
-        for nation in artists_nationality:
+        artists_nationality = findArtistNationality(catalog['ArtistID'],artists_ID,list_type)
+        for nation in lt.iterator(artists_nationality):
             if nation == '':
                 nation = 'Unknown'
-            if nation not in nations_ite:
-                nations_ite.append(nation)
-                if nation not in nations:
-                    nations[nation] = lt.newList(datastructure=list_type)
-                    lt.addLast(nations[nation], artwork)
-                else:
-                    lt.addLast(nations[nation], artwork)
+            if not map.contains(nations,nation):
+                nationality_artworks = lt.newList(datastructure=list_type)
+                lt.addLast(nationality_artworks,artwork)
+                map.put(nations,nation,nationality_artworks)
+            else:
+                nationality_artworks = map.get(nations,nation)['value']
+                lt.addLast(nationality_artworks,artwork)
     
-    for nation in nations:
-        num_artworks = lt.size(nations[nation])
+    nations_list = map.keySet(nations)
+    for nation in lt.iterator(nations_list):
+        num_artworks = lt.size(map.get(nations,nation)['value'])
         nationDict = {'Nation':nation,'NumbArtworks':num_artworks}
         lt.addLast(artworksNationality,nationDict)
     return artworksNationality, nations
@@ -298,7 +300,7 @@ def sortNations(artworksNationality,nations,sort_type):
     else:
         sortedList = ms.sort(artworksNationality,cmpArtworkByNumbWorks)
     art_nation = lt.getElement(sortedList,0)['Nation']
-    artworks_nation = nations[art_nation]
+    artworks_nation = map.get(nations,art_nation)['value']
     return sortedList,art_nation,artworks_nation
 
 
@@ -389,11 +391,12 @@ def checkDeparment(artworks,department):
         pos += 1
     return encountered
 
-def moveDepartment(artworks,department,list_type):
+def moveDepartment(artworks,department,map_type):
     art2trans = 0
     est_price = 0
     est_weight = 0
-    artworks_dep = lt.newList(datastructure=list_type)
+    price_map = map.newMap(maptype=map_type)
+    date_map = map.newMap(maptype=map_type)
 
     pos = 0
     while pos < lt.size(artworks):
@@ -405,48 +408,51 @@ def moveDepartment(artworks,department,list_type):
             est_price += price
             art2trans += 1
             artwork['EstPrice'] = price
-            lt.addLast(artworks_dep,artwork)
+            map.put(price_map,str(round(price,2)),artwork)
+            if artwork['Date'] != '':
+                map.put(date_map,artwork['Date'],artwork)
         pos += 1
-    return est_price, art2trans, est_weight, artworks_dep
+    return est_price, art2trans, est_weight, price_map, date_map
 
 def cmpDates(date1, date2): 
     return date1 < date2
 
-def cmpArtworkByEstPrice(artwork1, artwork2): 
-    return artwork1["EstPrice"] > artwork2['EstPrice']
-
-def artworksWithDate(artworks_dep,list_type):
-    artworksWithDate = lt.newList(datastructure=list_type)
-    for artwork in lt.iterator(artworks_dep):
-        if artwork['Date'] != '':
-            lt.addLast(artworksWithDate,artwork)
-    return artworksWithDate
+def cmpPrices(price1, price2): 
+    return price1 > price2
  
-def SortArtworksByDate(artworks_dep,sort_type):
+def SortArtworksByDate(date_map,sort_type,list_type):
+    dates = map.keySet(date_map)
     if sort_type == "QUICKSORT":
-        sortedList = qs.sort(artworks_dep,cmpArtworkByDate)
+        sortedList = qs.sort(dates,cmpDates)
     elif sort_type == "INSERTION":
-        sortedList = ins.sort(artworks_dep,cmpArtworkByDate)
+        sortedList = ins.sort(dates,cmpDates)
     elif sort_type == "SHELL":
-        sortedList = ss.sort(artworks_dep,cmpArtworkByDate)
+        sortedList = ss.sort(dates,cmpDates)
     elif sort_type == "SELECTION":
-        sortedList = scs.sort(artworks_dep,cmpArtworkByDate)
+        sortedList = scs.sort(dates,cmpDates)
     else:
-        sortedList = ms.sort(artworks_dep,cmpArtworkByDate)
-    return sortedList
+        sortedList = ms.sort(dates,cmpDates)
+    ordered_dates = lt.newList(list_type)
+    for date in lt.iterator(sortedList):
+        lt.addLast(ordered_dates,map.get(date_map,date)['value'])
+    return ordered_dates
 
-def SortArtworksByPrice(artworks_dep,sort_type):
+def SortArtworksByPrice(price_map,sort_type,list_type):
+    prices = map.keySet(price_map)
     if sort_type == "QUICKSORT":
-        sortedList = qs.sort(artworks_dep,cmpArtworkByEstPrice)
+        sortedList = qs.sort(prices,cmpPrices)
     elif sort_type == "INSERTION":
-        sortedList = ins.sort(artworks_dep,cmpArtworkByEstPrice)
+        sortedList = ins.sort(prices,cmpPrices)
     elif sort_type == "SHELL":
-        sortedList = ss.sort(artworks_dep,cmpArtworkByEstPrice)
+        sortedList = ss.sort(prices,cmpPrices)
     elif sort_type == "SELECTION":
-        sortedList = scs.sort(artworks_dep,cmpArtworkByEstPrice)
+        sortedList = scs.sort(prices,cmpPrices)
     else:
-        sortedList = ms.sort(artworks_dep,cmpArtworkByEstPrice)
-    return sortedList
+        sortedList = ms.sort(prices,cmpPrices)
+    ordered_prices = lt.newList(list_type)
+    for price in lt.iterator(sortedList):
+        lt.addLast(ordered_prices,map.get(price_map,price)['value'])
+    return ordered_prices
 
 #Requirement 7
 def encounterNationality(catalog,nationality):
