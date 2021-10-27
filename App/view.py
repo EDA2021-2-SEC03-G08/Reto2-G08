@@ -44,17 +44,8 @@ def printMenu():
     print("4- Clasificar las obras de un artista por técnica")
     print("5- Clasificar las obras por la nacionalidad de sus creadores")
     print("6- Transportar obras de un departamento")
-    print("7- Realizar prueba de rendimiento")
-    print("8- Encontrar el número total de obras para una nacionalidad")
-    print("9- Salir")
-
-def printPerfMenu():
-    print("1- Listar cronológicamente los artistas para un rango de años")
-    print("2- Listar cronológicamente las adquisiciones")
-    print("3- Clasificar las obras de un artista por técnica")
-    print("4- Clasificar las obras por la nacionalidad de sus creadores")
-    print("5- Transportar obras de un departamento")
-    print("6- Volver al menú principal")
+    print("7- Encontrar el número total de obras para una nacionalidad")
+    print("8- Salir")
 
 def printLastArtists(Artists):
     LastArtists = lt.subList(Artists,lt.size(Artists)-4,3)
@@ -231,7 +222,7 @@ def printReq4Answer(art_nation,artworks_nation,sorted_nations,artists):
         i += 1
 
 #Requirement 5
-def printReq5Answer(moveDepartmentAns, department, sort_type, artists,list_type):
+def printReq5Answer(moveDepartmentAns, department, artists,artworks_date,artworks_price):
     est_price, art2trans, est_weight, price_map, date_map = moveDepartmentAns
     print('\nSe realizó la estimación del cálculo de costos para mover las obras del departamento ' + department + '.')
 
@@ -241,7 +232,7 @@ def printReq5Answer(moveDepartmentAns, department, sort_type, artists,list_type)
     input('Presione "Enter" para continuar.')
 
     print('\nLas 5 obras más antiguas encontradas son: ')
-    artworks_date = controller.SortArtworksByDate(date_map,sort_type,list_type)
+    
     i = 1
     while i <= 5:
         artwork = lt.getElement(artworks_date,i)
@@ -254,7 +245,6 @@ def printReq5Answer(moveDepartmentAns, department, sort_type, artists,list_type)
     input('Presione "Enter" para continuar.')
 
     print('\nLas 5 obras más costosas encontradas son: ')
-    artworks_price = controller.SortArtworksByPrice(price_map,sort_type,list_type)
     i = 1
     while i <= 5:
         artwork = lt.getElement(artworks_price,i)
@@ -356,9 +346,14 @@ while True:
         
         StartYear = int(input('Brinde el año inicial del rango: '))
         EndYear = int(input('Brinde el año final del rango: '))
+        start_time = controller.start_endPerfTest()
         artistsInRange = controller.ArtistsInRange(Artists,StartYear,EndYear,list_type,map_type)
         SortedArtists = controller.SortChronologically(artistsInRange,StartYear,EndYear,list_type)
+        stop_time = controller.start_endPerfTest()
         printReq1Answer(SortedArtists,StartYear,EndYear)
+        total_time = (stop_time - start_time)*1000
+        print('El tiempo usado para llevar a cabo el algoritmo es de ' + str(total_time) + ' mseg.')
+        input('Presione "Enter" para continuar.\n')
 
     elif int(inputs[0]) == 3:
         valid_map = False
@@ -375,14 +370,26 @@ while True:
             else:
                 map_type = int(map_type)
                 valid_map = True
+        
+        sortValido = False
+        while not sortValido:
+            sort_type = int(input("Seleccione el tipo de sort\n (1.) QuickSort (2.) Insert (3.) Shell (4.) Selection (5.) Merge: "))
+            if(sort_type != 1 and sort_type != 2 and sort_type != 3 and sort_type != 4 and sort_type != 5):
+                print("Por favor ingrese una opción válida\n")
+            else:
+                sortValido = True
 
         StartYear = input('Brinde la fecha inicial del rango: ')
         EndYear = input('Brinde la fecha final del rango: ')
+        start_time = controller.start_endPerfTest()
         artworksInRange = controller.ArtworksInRange(Artworks,StartYear,EndYear,list_type,valid_map)
-        sort_type = 5
         sorted_artworks = controller.SortArtworks(artworksInRange,sort_type,list_type)
-
+        stop_time = controller.start_endPerfTest()
         printReq2Answer(sorted_artworks,StartYear,EndYear,Artists)
+        
+        total_time = (stop_time - start_time)*1000
+        print('El tiempo usado para llevar a cabo el algoritmo es de ' + str(total_time) + ' mseg.')
+        input('Presione "Enter" para continuar.\n')
 
     elif int(inputs[0]) == 4:
         valid_map = False
@@ -405,8 +412,13 @@ while True:
         if artist_ID == 'NotFound':
             'No se ha encontrado el artista escogido.'
         else:
+            start_time = controller.start_endPerfTest()
             artist_info = controller.artistMediumInfo(Artworks,artist_ID,list_type,map_type)
+            stop_time = controller.start_endPerfTest()
         printReq3Answer(artist_name,artist_info)
+        input('Presione "Enter" para continuar.\n')
+        total_time = (stop_time - start_time)*1000
+        print('El tiempo usado para llevar a cabo el algoritmo es de ' + str(total_time) + ' mseg.')
         input('Presione "Enter" para continuar.\n')
         
 
@@ -426,11 +438,15 @@ while True:
             else:
                 map_type = int(map_type)
                 valid_map = True
-        
+        start_time = controller.start_endPerfTest()
         artworksNationality,nations = controller.nationalityArtworks(Artworks,catalog,list_type,map_type)
         sort_type = 5
         sorted_nations,art_nation,artworks_nation = controller.sortNations(artworksNationality,nations,sort_type)
+        stop_time = controller.start_endPerfTest()
         printReq4Answer(art_nation,artworks_nation,sorted_nations,Artists)
+        input('Presione "Enter" para continuar.\n')
+        total_time = (stop_time - start_time)*1000
+        print('El tiempo usado para llevar a cabo el algoritmo es de ' + str(total_time) + ' mseg.')
         input('Presione "Enter" para continuar.\n')
 
 
@@ -450,135 +466,32 @@ while True:
                 map_type = int(map_type)
                 valid_map = True
         
+        sortValido = False
+        while not sortValido:
+            sort_type = int(input("Seleccione el tipo de sort\n (1.) QuickSort (2.) Insert (3.) Shell (4.) Selection (5.) Merge: "))
+            if(sort_type != 1 and sort_type != 2 and sort_type != 3 and sort_type != 4 and sort_type != 5):
+                print("Por favor ingrese una opción válida\n")
+            else:
+                sortValido = True
+        
         department = input('Brinde el nombre del departamento para el cual desea calcular el costo: ')
         if controller.checkDepartment(Artworks,department):
+            start_time = controller.start_endPerfTest()
             moveDepartmentAns = controller.moveDepartment(Artworks,department,map_type)
-            sort_type = 5
-            printReq5Answer(moveDepartmentAns,department,sort_type,Artists,list_type)
+            est_price, art2trans, est_weight, price_map, date_map = moveDepartmentAns
+            artworks_date = controller.SortArtworksByDate(date_map,sort_type,list_type)
+            artworks_price = controller.SortArtworksByPrice(price_map,sort_type,list_type)
+            stop_time = controller.start_endPerfTest()
+            printReq5Answer(moveDepartmentAns,department,Artists,artworks_date,artworks_price)
+            input('Presione "Enter" para continuar.\n')
+            total_time = (stop_time - start_time)*1000
+            print('El tiempo usado para llevar a cabo el algoritmo es de ' + str(total_time) + ' mseg.')
             input('Presione "Enter" para continuar.\n')
         else:
             print('Debe seleccionar un departamento válido.')
             input('Presione "Enter" para continuar.\n')
     
-
     elif int(inputs[0]) == 7:
-        print('\nSe realizará una prueba de rendimiento.')
-        input('Presione "Enter" para continuar.\n')
-        reqValido = False
-        while not reqValido:
-            printPerfMenu()
-            req = int(input('Escoja la tarea de la cual desea realizar la prueba de rendimiento: '))
-            if req not in range(7):
-                print('Debe seleccionar una opción válida.')
-                input('Presione "Enter" para continuar.\n')
-            else:
-                reqValido = True
-        
-        sampleValido = False
-        while not sampleValido:
-            sample_size = input('Escoja el tamaño de muestra: ')
-            if sample_size.isnumeric():
-                sample_size = int(sample_size)
-                sampleValido = True
-            else:
-                print("Por favor ingrese una opción válida")
-        
-        print('\nSe procederá a realizar el test de rendimiento con la tarea escogida.')
-        input('Presione "Enter" para continuar.\n')
-        if req == 1:
-            StartYear = int(input('Brinde el año inicial del rango: '))
-            EndYear = int(input('Brinde el año final del rango: '))
-            sample = controller.createSample(Artists,sample_size)
-            start_time = controller.start_endPerfTest()
-            artistsInRange = controller.ArtistsInRange(sample,StartYear,EndYear,list_type)
-            SortedArtists = controller.SortChronologically(artistsInRange)
-            stop_time = controller.start_endPerfTest()
-            total_time = (stop_time - start_time)*1000
-            print('El tiempo usado para llevar a cabo el algoritmo es de ' + str(total_time) + ' mseg.')
-            input('Presione "Enter" para continuar.\n')
-        elif req == 2:
-            StartYear = input('Brinde la fecha inicial del rango: ')
-            EndYear = input('Brinde la fecha final del rango: ')
-            sortValido = False
-            while not sortValido:
-                sort_type = int(input("Seleccione el tipo de sort\n (1.) QuickSort (2.) Insert (3.) Shell (4.) Selection (5.) Merge: "))
-                if(sort_type != 1 and sort_type != 2 and sort_type != 3 and sort_type != 4 and sort_type != 5):
-                    print("Por favor ingrese una opción válida\n")
-                else:
-                    sortValido = True
-            
-            validPerc = False
-            while not validPerc:
-                perc = float(input("Seleccione el porcentaje de los datos que desea usar: "))
-                if perc > 0 and perc <= 1:
-                    validPerc = True
-                else:
-                    print("Por favor ingrese una opción válida\n")
-            
-            sample = controller.createSample(Artworks,sample_size)
-            start_time = controller.start_endPerfTest()
-            artworksInRange = controller.ArtworksInRange(Artworks,StartYear,EndYear,list_type)
-            samplePerc = controller.createPercSample(artworksInRange,perc)
-            sorted_artworks = controller.SortArtworks(samplePerc,sort_type)
-            stop_time = controller.start_endPerfTest()
-            total_time = (stop_time - start_time)*1000
-            print('El tiempo usado para llevar a cabo el algoritmo es de ' + str(total_time) + ' mseg.')
-            input('Presione "Enter" para continuar.\n')
-        elif req == 3:
-            print('Nota: para este algoritmo se usará el tamaño de la muestra sobre el total de obras posibles.')
-            artist_name = input('Brinde el nombre del artista del cual desea obtener información: ')
-            sample = controller.createSample(Artworks,sample_size)
-            start_time = controller.start_endPerfTest()
-            artist_ID = controller.encounterArtist(Artists,artist_name)
-            if artist_ID == 'NotFound':
-                'No se ha encontrado el artista escogido.'
-            else:
-                artist_info = controller.artistMediumInfo(sample,artist_ID,list_type)
-            stop_time = controller.start_endPerfTest()
-            total_time = (stop_time - start_time)*1000
-            print('El tiempo usado para llevar a cabo el algoritmo es de ' + str(total_time) + ' mseg.')
-            input('Presione "Enter" para continuar.\n')
-        elif req == 4:
-            print('\nSe organizarán las obras por nacionalidad.')
-            sample = controller.createSample(Artworks,sample_size)
-            start_time = controller.start_endPerfTest()
-            artworksNationality,nations = controller.nationalityArtworks(sample,Artists,list_type)
-            sort_type = 5
-            sorted_nations,art_nation,artworks_nation = controller.sortNations(artworksNationality,nations,sort_type)
-            stop_time = controller.start_endPerfTest()
-            total_time = (stop_time - start_time)*1000
-            print('El tiempo usado para llevar a cabo el algoritmo es de ' + str(total_time) + ' mseg.')
-            input('Presione "Enter" para continuar.\n')
-        elif req == 5:
-            validDepartment = False
-            while not validDepartment:
-                department = input('Brinde el nombre del departamento para el cual desea calcular el costo: ')
-                if controller.checkDepartment(Artworks,department):
-                    validDepartment = True
-                else:
-                    print('Debe seleccionar un departamento válido.')
-                    input('Presione "Enter" para continuar.\n')
-            sample = controller.createSample(Artworks,sample_size)
-            start_time = controller.start_endPerfTest()
-            moveDepartmentAns = controller.moveDepartment(sample,department,list_type)
-            sortValido = False
-            while not sortValido:
-                sort_type = int(input("Seleccione el tipo de sort\n (1.) QuickSort (2.) Insert (3.) Shell (4.) Selection (5.) Merge: "))
-                if(sort_type != 1 and sort_type != 2 and sort_type != 3 and sort_type != 4 and sort_type != 5):
-                    print("Por favor ingrese una opción válida\n")
-                else:
-                    sortValido = True
-            artworks_dep = moveDepartmentAns[3]
-            artworks_wdate = controller.artworksWithDate(artworks_dep,list_type)
-            artworks_date = controller.SortArtworksByDate(artworks_wdate,sort_type)
-            artworks_price = controller.SortArtworksByPrice(artworks_dep,sort_type)
-            stop_time = controller.start_endPerfTest()
-            total_time = (stop_time - start_time)*1000
-            print('El tiempo usado para llevar a cabo el algoritmo es de ' + str(total_time) + ' mseg.')
-            input('Presione "Enter" para continuar.\n')
-        else:
-            pass
-    elif int(inputs[0]) == 8:
         valid_nationality = False
         while not(valid_nationality):
             nationality = input('Brinde la nacionalidad para la cual desea conocer el número de obras: ')
@@ -596,7 +509,7 @@ while True:
         print('\nEl tiempo usado para llevar a cabo el algoritmo es de ' + str(total_time) + ' mseg.')
         input('Presione "Enter" para continuar.\n')
     
-    elif int(inputs[0]) == 9:
+    elif int(inputs[0]) == 8:
         sys.exit(0)
     else:
         print('Debe seleccionar una opción válida')

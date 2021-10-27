@@ -67,16 +67,6 @@ def addArtworks(catalog, artwork):
     artworks = catalog['artworks']
     lt.addLast(artworks,artwork)
 
-'''
-def encMediums(list_type):
-    return lt.newList(datastructure=list_type)
-
-def addMedium(encMediums,artwork):
-    medium = artwork['Medium']
-    if not( lt.isPresent(encMediums,medium)):
-        lt.addLast(encMediums,medium)
-'''
-
 def loadMedium(catalog, artwork, list_type):
     medium = artwork['Medium']
     if medium == '':
